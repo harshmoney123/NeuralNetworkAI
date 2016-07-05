@@ -9,6 +9,14 @@
 #include "Net.h"
 #include "Neuron.h"
 
+//These values need to be changed to lower error while training
+const double STARTING_ETA = 0.2;
+const double STARTING_ALPHA = 0.3;
+
+//These are the upper and lower bounds of the ETA and Alpha values
+const double UPPERBOUND = 1.0;
+const double LOWERBOUND = 0.0;
+
 void Net::getResults(vector<double> &resultVals) const
 {
     resultVals.clear();
@@ -18,6 +26,7 @@ void Net::getResults(vector<double> &resultVals) const
     }
 }
 
+//This goes back through the neural net, training it with the target values
 void Net::backProp(const vector<double> &targetVals)
 {
     numOfBackProps++;
@@ -71,6 +80,9 @@ void Net::backProp(const vector<double> &targetVals)
             layer[n].updateInputWeights(prevLayer);
         }
     }
+    //This sets the Eta and Alpha values of each Neuron
+    // (considering moving this somewhere else to lower time complexity
+    // such as within the update Input Weight^^ up there
     for (size_t layerNum = 0; layerNum < m_layers.size()-1; layerNum++) {
         Layer &layer = m_layers[layerNum];
         for (size_t n = 0; n < layer.size() - 1; n++) {
@@ -80,6 +92,7 @@ void Net::backProp(const vector<double> &targetVals)
     }
 }
 
+//This runs the input values through the neural net and determines an output
 void Net::feedForward(const vector<double> &inputVals)
 {
     assert(inputVals.size() == m_layers[0].size() - 1);
@@ -101,8 +114,8 @@ void Net::feedForward(const vector<double> &inputVals)
 Net::Net(const vector<size_t> &topology)
 {
     size_t numLayers = topology.size();
-    overallEta = 0.2;
-    overallAlpha = 0.3;
+    overallEta = STARTING_ETA;
+    overallAlpha = STARTING_ALPHA;
     
     for (size_t layerNum = 0; layerNum < numLayers; ++layerNum) {
         m_layers.push_back(Layer());
@@ -125,34 +138,34 @@ Net::Net(const vector<size_t> &topology)
     numOfBackProps = 0;
 }
 
+//This sets the overal Alpha of the Net
 void Net::setOverallAlpha(double newAlpha) {
     overallAlpha = newAlpha;
 }
 
+//This sets the overall Eta of the Net
 void Net::setOverallEta(double newEta) {
     overallEta = newEta;
 }
 
+//This updates the eta value basked on the error differences
 void Net::etaValUpdate(double errorDiff) {
-    if (overallEta + errorDiff < 0) {
+    if (overallEta + errorDiff < LOWERBOUND) {
         overallEta = 0;
-    } else if(overallEta + errorDiff > 1) {
+    } else if(overallEta + errorDiff > UPPERBOUND) {
         overallEta = 1;
     } else {
-    overallEta += (errorDiff/numOfBackProps);
+        overallEta += (errorDiff/numOfBackProps);
     }
 }
 
+//This updates the alpha value based on the difference in error
 void Net::alphaValUpdate(double errorDiff) {
-    if (overallAlpha + errorDiff < 0) {
+    if (overallAlpha + errorDiff < LOWERBOUND) {
         overallAlpha = 0;
-    } else if(overallAlpha + errorDiff > 1) {
+    } else if(overallAlpha + errorDiff > UPPERBOUND) {
         overallAlpha = 1;
     } else {
         overallAlpha += (errorDiff/numOfBackProps);
     }
-}
-
-double Net::calcErrorDiff() {
-    return 0.0;
 }

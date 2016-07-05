@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// This function shows the values of the vector
 void showVectorVals(string label, vector<double> &v)
 {
     cout << label << " ";
@@ -24,7 +25,7 @@ void showVectorVals(string label, vector<double> &v)
 int main()
 {
     string fileName;
-    cout << "Please input trainging data file name: ";
+    cout << "Please input training data file name: ";
     cin >> fileName;
     TrainingData trainData(fileName);
     
@@ -68,7 +69,7 @@ int main()
     while (oneValue != 20) {
         inputVals.clear();
         string line;
-        cout << endl << "please enter in string of input vals: ";
+        cout << endl << "please enter in string of input vals for testing: ";
         cin >> line;
         stringstream ss(line);
         while (ss >> oneValue) {
