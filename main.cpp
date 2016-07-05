@@ -1,33 +1,82 @@
-#define WIN32_LEAN_AND_MEAN
- 
-#include <stdlib.h>
-#include <time.h>
-
-
-#include "utils.h"
-#include "resource.h"
-#include "CParams.h"
-#include "CNeuralNet.h"
+// neural-net-tutorial.cpp
 #include <vector>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include <cmath>
+#include <string>
+#include "Neuron.h"
+#include "Net.h"
+#include "TrainingData.h"
 
 using namespace std;
 
-///////////////////////GLOBALS ////////////////////////////////////
-
-string			szApplicationName = "Smart Sweepers v1.0";
-string			szWindowClassName = "sweeper";
-
-
-//create an instance of the parameter class.
-CParams   g_Params;
-
-int main() {
-    CNeuralNet testNet;
-    vector<double> weights = testNet.GetWeights();
+void showVectorVals(string label, vector<double> &v)
+{
+    cout << label << " ";
+    for (unsigned i = 0; i < v.size(); ++i) {
+        cout << v[i] << " ";
+    }
     
-    return 0;
-};
-// end WinMain
+    cout << endl;
+}
 
-
-
+int main()
+{
+    string fileName;
+    cout << "Please input trainging data file name: ";
+    cin >> fileName;
+    TrainingData trainData(fileName);
+    
+    // e.g., { 3, 2, 1 }
+    vector<size_t> topology;
+    trainData.getTopology(topology);
+    
+    Net myNet(topology);
+    
+    vector<double> inputVals, targetVals, resultVals;
+    int trainingPass = 0;
+    
+    while (!trainData.isEof()) {
+        ++trainingPass;
+        cout << endl << "Pass " << trainingPass;
+        
+        // Get new input data and feed it forward:
+        if (trainData.getNextInputs(inputVals) != topology[0]) {
+            break;
+        }
+        showVectorVals(": Inputs:", inputVals);
+        myNet.feedForward(inputVals);
+        
+        // Collect the net's actual output results:
+        myNet.getResults(resultVals);
+        showVectorVals("Outputs:", resultVals);
+        
+        // Train the net what the outputs should have been:
+        trainData.getTargetOutputs(targetVals);
+        showVectorVals("Targets:", targetVals);
+        assert(targetVals.size() == topology.back());
+        
+        myNet.backProp(targetVals);
+        
+        // Report how well the training is working, average over recent samples:
+        cout << "Net recent average error: "
+        << myNet.getRecentAverageError() << endl;
+    }
+    
+    double oneValue;
+    while (oneValue != 20) {
+        inputVals.clear();
+        string line;
+        cout << endl << "please enter in string of input vals: ";
+        cin >> line;
+        stringstream ss(line);
+        while (ss >> oneValue) {
+            inputVals.push_back(oneValue);
+        }
+        myNet.feedForward(inputVals);
+        myNet.getResults(resultVals);
+        showVectorVals("Outputs:", resultVals);
+    }
+    cout << endl << "Done" << endl;
+}
